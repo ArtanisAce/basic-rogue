@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 let Game = {
   _display: null, // ESTOS DOS OBJETOS SON PRIVADOS, SE SUPONE (_) QUIZA HACERLOS PRIVADOS DE VERDAD?
   _currentScreen: null,
