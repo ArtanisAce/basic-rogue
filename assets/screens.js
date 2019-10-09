@@ -26,18 +26,23 @@ Game.Screen.startScreen = {
 // Define our playing screen
 Game.Screen.playScreen = {
   _map: null,
+  _centerX: 0,
+  _centerY: 0,
   enter: function() {
     let map = [];
-    for (let x = 0; x < 80; x++) {
+    // Create a map based on our size parameters
+    const mapWidth = 500;
+    const mapHeight = 500;
+    for (let x = 0; x < mapWidth; x++) {
       // Create the nested array for the y values
       map.push([]);
       // Add all the tiles
-      for (let y = 0; y < 24; y++) {
+      for (let y = 0; y < mapHeight; y++) {
         map[x].push(Game.Tile.nullTile);
       }
     }
     // Setup the map generator
-    let generator = new ROT.Map.Cellular(80, 24);
+    let generator = new ROT.Map.Cellular(mapWidth, mapHeight);
     generator.randomize(0.5);
     let totalIterations = 3;
     // Iteratively smoothen the map
@@ -54,6 +59,22 @@ Game.Screen.playScreen = {
     });
     // Create our map from the tiles
     this._map = new Game.Map(map);
+  },
+  move: function(dX, dY) {
+    // Positive dX means movement right
+    // negative means movement left
+    // 0 means none
+    this._centerX = Math.max(
+      0,
+      Math.min(this._map.getWidth() - 1, this._centerX + dX)
+    );
+    // Positive dY means movement down
+    // negative means movement up
+    // 0 means none
+    this._centerY = Math.max(
+      0,
+      Math.min(this._map.getHeight() - 1, this._centerY + dY)
+    );
   },
   exit: function() {
     console.log("Exited play screen.");
@@ -75,16 +96,25 @@ Game.Screen.playScreen = {
     }
   },
   handleInput: function(inputType, inputData) {
-    if (inputType === "keydown") {
-      // If enter is pressed, go to the win screen
-      // If escape is pressed, go to lose screen
-      if (inputData.keyCode === ROT.KEYS.VK_RETURN) {
-        Game.switchScreen(Game.Screen.winScreen);
-      } else if (inputData.keyCode === ROT.KEYS.VK_ESCAPE) {
-        Game.switchScreen(Game.Screen.loseScreen);
-      }
-    }
-  }
+    if (inputType === 'keydown') {
+        // If enter is pressed, go to the win screen
+        // If escape is pressed, go to lose screen
+        if (inputData.keyCode === ROT.KEYS.VK_RETURN) {
+            Game.switchScreen(Game.Screen.winScreen);
+        } else if (inputData.keyCode === ROT.KEYS.VK_ESCAPE) {
+            Game.switchScreen(Game.Screen.loseScreen);
+        }
+        // Movement
+        if (inputData.keyCode === ROT.KEYS.VK_LEFT) {
+            this.move(-1, 0);
+        } else if (inputData.keyCode === ROT.KEYS.VK_RIGHT) {
+            this.move(1, 0);
+        } else if (inputData.keyCode === ROT.KEYS.VK_UP) {
+            this.move(0, -1);
+        } else if (inputData.keyCode === ROT.KEYS.VK_DOWN) {
+            this.move(0, 1);
+        }
+
 };
 
 // Define our winning screen
