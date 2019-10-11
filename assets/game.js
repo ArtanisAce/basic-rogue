@@ -7,25 +7,29 @@ let Game = {
     // Any necessary initialization will go here.
     this._display = new ROT.Display({
       width: this._screenWidth,
-      height: this._screenWidth
+      height: this._screenHeight
     });
     // Create a helper function for binding to an event
     // and making it send it to the screen
     let game = this; // So that we don't lose this
-    let bindEventToScreen = function(event) {
+    const bindEventToScreen = function(event) {
       window.addEventListener(event, function(e) {
         // When an event is received, send it to the
         // screen if there is one
         if (game._currentScreen !== null) {
           // Send the event type and data to the screen
           game._currentScreen.handleInput(event, e);
+          // Clear the screen
+          game._display.clear();
+          // Render the screen
+          game._currentScreen.render(game._display);
         }
       });
     };
     // Bind keyboard input events
     bindEventToScreen("keydown");
-    bindEventToScreen("keyup");
-    bindEventToScreen("keypress");
+    //bindEventToScreen('keyup');
+    //bindEventToScreen('keypress');
   },
   getDisplay: function() {
     return this._display;

@@ -31,8 +31,8 @@ Game.Screen.playScreen = {
   enter: function() {
     let map = [];
     // Create a map based on our size parameters
-    const mapWidth = 500;
-    const mapHeight = 500;
+    const mapWidth = 250;
+    const mapHeight = 250;
     for (let x = 0; x < mapWidth; x++) {
       // Create the nested array for the y values
       map.push([]);
@@ -42,16 +42,12 @@ Game.Screen.playScreen = {
       }
     }
     // Setup the map generator
-    let generator = new ROT.Map.Cellular(mapWidth, mapHeight);
-    generator.randomize(0.5);
-    let totalIterations = 3;
-    // Iteratively smoothen the map
-    for (let i = 0; i < totalIterations - 1; i++) {
-      generator.create();
-    }
+    const generator = new ROT.Map.Uniform(mapWidth, mapHeight, {
+      timeLimit: 5000
+    });
     // Smoothen it one last time and then update our map
     generator.create(function(x, y, v) {
-      if (v === 1) {
+      if (v === 0) {
         map[x][y] = Game.Tile.floorTile;
       } else {
         map[x][y] = Game.Tile.wallTile;
@@ -80,43 +76,62 @@ Game.Screen.playScreen = {
     console.log("Exited play screen.");
   },
   render: function(display) {
-    // Iterate through all map cells
-    for (let x = 0; x < this._map.getWidth(); x++) {
-      for (let y = 0; y < this._map.getHeight(); y++) {
+    const screenWidth = Game.getScreenWidth();
+    const screenHeight = Game.getScreenHeight();
+    // Make sure the x-axis doesn't go to the left of the left bound
+    let topLeftX = Math.max(0, this._centerX - screenWidth / 2);
+    // Make sure we still have enough space to fit an entire game screen
+    topLeftX = Math.min(topLeftX, this._map.getWidth() - screenWidth);
+    // Make sure the y-axis doesn't above the top bound
+    let topLeftY = Math.max(0, this._centerY - screenHeight / 2);
+    // Make sure we still have enough space to fit an entire game screen
+    topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
+    // Iterate through all visible map cells
+    for (let x = topLeftX; x < topLeftX + screenWidth; x++) {
+      for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
         // Fetch the glyph for the tile and render it to the screen
-        let glyph = this._map.getTile(x, y).getGlyph();
+        // at the offset position.
+        const glyph = this._map.getTile(x, y).getGlyph();
         display.draw(
-          x,
-          y,
+          x - topLeftX,
+          y - topLeftY,
           glyph.getChar(),
           glyph.getForeground(),
           glyph.getBackground()
         );
       }
     }
+    // Render the cursor
+    display.draw(
+      this._centerX - topLeftX,
+      this._centerY - topLeftY,
+      "@",
+      "white",
+      "black"
+    );
   },
   handleInput: function(inputType, inputData) {
-    if (inputType === 'keydown') {
-        // If enter is pressed, go to the win screen
-        // If escape is pressed, go to lose screen
-        if (inputData.keyCode === ROT.KEYS.VK_RETURN) {
-            Game.switchScreen(Game.Screen.winScreen);
-        } else if (inputData.keyCode === ROT.KEYS.VK_ESCAPE) {
-            Game.switchScreen(Game.Screen.loseScreen);
-        }
-        // Movement
-        if (inputData.keyCode === ROT.KEYS.VK_LEFT) {
-            this.move(-1, 0);
-        } else if (inputData.keyCode === ROT.KEYS.VK_RIGHT) {
-            this.move(1, 0);
-        } else if (inputData.keyCode === ROT.KEYS.VK_UP) {
-            this.move(0, -1);
-        } else if (inputData.keyCode === ROT.KEYS.VK_DOWN) {
-            this.move(0, 1);
-        }
-
+    if (inputType === "keydown") {
+      // If enter is pressed, go to the win screen
+      // If escape is pressed, go to lose screen
+      if (inputData.keyCode === ROT.KEYS.VK_RETURN) {
+        Game.switchScreen(Game.Screen.winScreen);
+      } else if (inputData.keyCode === ROT.KEYS.VK_ESCAPE) {
+        Game.switchScreen(Game.Screen.loseScreen);
+      }
+      // Movement
+      if (inputData.keyCode === ROT.KEYS.VK_LEFT) {
+        this.move(-1, 0);
+      } else if (inputData.keyCode === ROT.KEYS.VK_RIGHT) {
+        this.move(1, 0);
+      } else if (inputData.keyCode === ROT.KEYS.VK_UP) {
+        this.move(0, -1);
+      } else if (inputData.keyCode === ROT.KEYS.VK_DOWN) {
+        this.move(0, 1);
+      }
+    }
+  }
 };
-
 // Define our winning screen
 Game.Screen.winScreen = {
   enter: function() {
@@ -141,7 +156,7 @@ Game.Screen.winScreen = {
   }
 };
 
-// Define our winning screen
+// Define our losing screen
 Game.Screen.loseScreen = {
   enter: function() {
     console.log("Entered lose screen.");
