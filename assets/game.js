@@ -1,3 +1,10 @@
+//TODO: Consider to move this somewhere else or refactor the code that uses it
+Function.prototype.extend = function(a) {
+  this.prototype = Object.create(a.prototype);
+  this.prototype.constructor = this;
+  return this;
+};
+
 let Game = {
   _display: null, // ESTOS DOS OBJETOS SON PRIVADOS, SE SUPONE (_) QUIZA HACERLOS PRIVADOS DE VERDAD?
   _currentScreen: null,

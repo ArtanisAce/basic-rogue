@@ -26,8 +26,7 @@ Game.Screen.startScreen = {
 // Define our playing screen
 Game.Screen.playScreen = {
   _map: null,
-  _centerX: 0,
-  _centerY: 0,
+  _player: null,
   enter: function() {
     let map = [];
     // Create a map based on our size parameters
@@ -55,22 +54,17 @@ Game.Screen.playScreen = {
     });
     // Create our map from the tiles
     this._map = new Game.Map(map);
+    // Create our player and set the position
+    this._player = new Game.Entity(Game.PlayerTemplate);
+    const position = this._map.getRandomFloorPosition();
+    this._player.setX(position.x);
+    this._player.setY(position.y);
   },
   move: function(dX, dY) {
-    // Positive dX means movement right
-    // negative means movement left
-    // 0 means none
-    this._centerX = Math.max(
-      0,
-      Math.min(this._map.getWidth() - 1, this._centerX + dX)
-    );
-    // Positive dY means movement down
-    // negative means movement up
-    // 0 means none
-    this._centerY = Math.max(
-      0,
-      Math.min(this._map.getHeight() - 1, this._centerY + dY)
-    );
+    const newX = this._player.getX() + dX;
+    const newY = this._player.getY() + dY;
+    // Try to move to the new cell
+    this._player.tryMove(newX, newY, this._map);
   },
   exit: function() {
     console.log("Exited play screen.");
@@ -79,11 +73,11 @@ Game.Screen.playScreen = {
     const screenWidth = Game.getScreenWidth();
     const screenHeight = Game.getScreenHeight();
     // Make sure the x-axis doesn't go to the left of the left bound
-    let topLeftX = Math.max(0, this._centerX - screenWidth / 2);
+    let topLeftX = Math.max(0, this._player.getX() - screenWidth / 2);
     // Make sure we still have enough space to fit an entire game screen
     topLeftX = Math.min(topLeftX, this._map.getWidth() - screenWidth);
     // Make sure the y-axis doesn't above the top bound
-    let topLeftY = Math.max(0, this._centerY - screenHeight / 2);
+    let topLeftY = Math.max(0, this._player.getY() - screenHeight / 2);
     // Make sure we still have enough space to fit an entire game screen
     topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
     // Iterate through all visible map cells
@@ -91,23 +85,23 @@ Game.Screen.playScreen = {
       for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
         // Fetch the glyph for the tile and render it to the screen
         // at the offset position.
-        const glyph = this._map.getTile(x, y).getGlyph();
+        const tile = this._map.getTile(x, y);
         display.draw(
           x - topLeftX,
           y - topLeftY,
-          glyph.getChar(),
-          glyph.getForeground(),
-          glyph.getBackground()
+          tile.getChar(),
+          tile.getForeground(),
+          tile.getBackground()
         );
       }
     }
-    // Render the cursor
+    // Render the player
     display.draw(
-      this._centerX - topLeftX,
-      this._centerY - topLeftY,
-      "@",
-      "white",
-      "black"
+      this._player.getX() - topLeftX,
+      this._player.getY() - topLeftY,
+      this._player.getChar(),
+      this._player.getForeground(),
+      this._player.getBackground()
     );
   },
   handleInput: function(inputType, inputData) {
