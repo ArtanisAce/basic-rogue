@@ -26,18 +26,19 @@ Game.Entity = function(properties) {
           key != "name" &&
           !Object.prototype.hasOwnProperty.call(this, key)
         ) {
-        this[key] = mixins[i][key];
+          this[key] = mixins[i][key];
+        }
       }
-    }
-    // Add the name of this mixin to our attached mixins
-    this._attachedMixins[mixins[i].name] = true;
-    // If a group name is present, add it
-    if (mixins[i].groupName) {
-      this._attachedMixinGroups[mixins[i].groupName] = true;
-    }
-    // Finally call the init function if there is one
-    if (mixins[i].init) {
-      mixins[i].init.call(this, properties);
+      // Add the name of this mixin to our attached mixins
+      this._attachedMixins[mixins[i].name] = true;
+      // If a group name is present, add it
+      if (mixins[i].groupName) {
+        this._attachedMixinGroups[mixins[i].groupName] = true;
+      }
+      // Finally call the init function if there is one
+      if (mixins[i].init) {
+        mixins[i].init.call(this, properties);
+      }
     }
   }
 };
@@ -72,12 +73,12 @@ Game.Entity.prototype.getMap = function() {
 
 Game.Entity.prototype.hasMixin = function(obj) {
   // Allow passing the mixin itself or the name / group name as a string
-  if (typeof obj === 'object') {
-      return this._attachedMixins[obj.name];
+  if (typeof obj === "object") {
+    return this._attachedMixins[obj.name];
   } else {
-      return this._attachedMixins[obj] || this._attachedMixinGroups[obj];
+    return this._attachedMixins[obj] || this._attachedMixinGroups[obj];
   }
-}
+};
 
 const PlayerMoveableMixin = {
   name: "PlayerMoveable",

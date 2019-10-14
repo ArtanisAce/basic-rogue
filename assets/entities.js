@@ -1,14 +1,21 @@
 // Create our Mixins namespace
 Game.Mixins = {};
 
+/* MIXINS */
+
 // Define our Moveable mixin
 Game.Mixins.Moveable = {
   name: "Moveable",
   tryMove: function(x, y, map) {
     const tile = map.getTile(x, y);
-    // Check if we can walk on the tile
-    // and if so simply walk onto it
-    if (tile.isWalkable()) {
+    const target = map.getEntityAt(x, y);
+    // If an entity was present at the tile, then we
+    // can't move there
+    if (target) {
+      return false;
+      // Check if we can walk on the tile
+      // and if so simply walk onto it
+    } else if (tile.isWalkable()) {
       // Update the entity's position
       this._x = x;
       this._y = y;
@@ -23,10 +30,39 @@ Game.Mixins.Moveable = {
   }
 };
 
+// Main player's actor mixin
+Game.Mixins.PlayerActor = {
+  name: "PlayerActor",
+  groupName: "Actor",
+  act: function() {
+    // Re-render the screen
+    Game.refresh();
+    // Lock the engine and wait asynchronously
+    // for the player to press a key.
+    this.getMap()
+      .getEngine()
+      .lock();
+  }
+};
+
+Game.Mixins.FungusActor = {
+  name: "FungusActor",
+  groupName: "Actor",
+  act: function() {}
+};
+
+/* TEMPLATES */
+
 // Player template
 Game.PlayerTemplate = {
   character: "@",
   foreground: "white",
   background: "black",
-  mixins: [Game.Mixins.Moveable]
+  mixins: [Game.Mixins.Moveable, Game.Mixins.PlayerActor]
+};
+
+Game.FungusTemplate = {
+  character: "F",
+  foreground: "green",
+  mixins: [Game.Mixins.FungusActor]
 };
