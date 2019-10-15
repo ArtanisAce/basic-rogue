@@ -80,18 +80,18 @@ Game.Entity.prototype.hasMixin = function(obj) {
   }
 };
 
-const PlayerMoveableMixin = {
-  name: "PlayerMoveable",
-  groupName: "Moveable",
-  tryMove: function(x, y) {}
-};
-const MoleratMoveableMixin = {
-  name: "MoleratMoveable",
-  groupName: "Moveable",
-  tryMove: function(x, y) {}
-};
-const GhostMoveableMixin = {
-  name: "GhostMoveable",
-  groupName: "Moveable",
-  tryMove: function(x, y) {}
-};
+// const PlayerMoveableMixin = {
+//   name: "PlayerMoveable",
+//   groupName: "Moveable",
+//   tryMove: function(x, y) {}
+// };
+// const MoleratMoveableMixin = {
+//   name: "MoleratMoveable",
+//   groupName: "Moveable",
+//   tryMove: function(x, y) {}
+// };
+// const GhostMoveableMixin = {
+//   name: "GhostMoveable",
+//   groupName: "Moveable",
+//   tryMove: function(x, y) {}
+// };

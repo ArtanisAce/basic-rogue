@@ -28,10 +28,10 @@ Game.Screen.playScreen = {
   _map: null,
   _player: null,
   enter: function() {
-    let map = [];
+    const map = [];
     // Create a map based on our size parameters
-    const mapWidth = 250;
-    const mapHeight = 250;
+    const mapWidth = 100;
+    const mapHeight = 48;
     for (let x = 0; x < mapWidth; x++) {
       // Create the nested array for the y values
       map.push([]);
@@ -103,7 +103,7 @@ Game.Screen.playScreen = {
     );
     // Render the entities
     const entities = this._map.getEntities();
-    for (var i = 0; i < entities.length; i++) {
+    for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
       // Only render the entitiy if they would show up on the screen
       if (
@@ -132,14 +132,34 @@ Game.Screen.playScreen = {
         Game.switchScreen(Game.Screen.loseScreen);
       } else {
         // Movement
-        if (inputData.keyCode === ROT.KEYS.VK_LEFT) {
+        if (
+          inputData.keyCode === ROT.KEYS.VK_LEFT ||
+          inputData.keyCode === ROT.KEYS.VK_NUMPAD4
+        ) {
           this.move(-1, 0);
-        } else if (inputData.keyCode === ROT.KEYS.VK_RIGHT) {
+        } else if (
+          inputData.keyCode === ROT.KEYS.VK_RIGHT ||
+          inputData.keyCode === ROT.KEYS.VK_NUMPAD6
+        ) {
           this.move(1, 0);
-        } else if (inputData.keyCode === ROT.KEYS.VK_UP) {
+        } else if (
+          inputData.keyCode === ROT.KEYS.VK_UP ||
+          inputData.keyCode === ROT.KEYS.VK_NUMPAD8
+        ) {
           this.move(0, -1);
-        } else if (inputData.keyCode === ROT.KEYS.VK_DOWN) {
+        } else if (
+          inputData.keyCode === ROT.KEYS.VK_DOWN ||
+          inputData.keyCode === ROT.KEYS.VK_NUMPAD2
+        ) {
           this.move(0, 1);
+        } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD1) {
+          this.move(-1, 1);
+        } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD3) {
+          this.move(1, 1);
+        } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD7) {
+          this.move(-1, -1);
+        } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD9) {
+          this.move(1, -1);
         }
         // Unlock the engine
         this._map.getEngine().unlock();
