@@ -1,7 +1,7 @@
 // Create our Mixins namespace
 Game.Mixins = {};
 
-/* MIXINS */
+/**** MIXINS ****/
 
 // Define our Moveable mixin
 Game.Mixins.Moveable = {
@@ -87,8 +87,22 @@ Game.Mixins.FungusActor = {
 
 Game.Mixins.Destructible = {
   name: "Destructible",
-  init: function() {
-    this._hp = 1;
+  init: function(template) {
+    this._maxHp = template["maxHp"] || 10;
+    // We allow taking in health from the template incase we want
+    // the entity to start with a different amount of HP than the
+    // max specified.
+    this._hp = template["hp"] || this._maxHp;
+    this._defenseValue = template["defenseValue"] || 0;
+  },
+  getHp: function() {
+    return this._hp;
+  },
+  getMaxHp: function() {
+    return this._maxHp;
+  },
+  getDefenseValue: function() {
+    return this._defenseValue;
   },
   takeDamage: function(attacker, damage) {
     this._hp -= damage;
@@ -99,34 +113,48 @@ Game.Mixins.Destructible = {
   }
 };
 
-Game.Mixins.SimpleAttacker = {
-  name: "SimpleAttacker",
+Game.Mixins.Attacker = {
+  name: "Attacker",
   groupName: "Attacker",
+  init: function(template) {
+    this._attackValue = template["attackValue"] || 1;
+  },
   attack: function(target) {
-    // Only remove the entity if they were attackable
+    // If the target is destructible, calculate the damage
+    // based on attack and defense value
     if (target.hasMixin("Destructible")) {
-      target.takeDamage(this, 1);
+      //TODO: Refactor this to use Basic Fantasy Attack bonus + d20 >= AC
+      const attack = this.getAttackValue();
+      const defense = target.getDefenseValue();
+      const max = Math.max(0, attack - defense);
+      target.takeDamage(this, 1 + Math.floor(Math.random() * max));
     }
+  },
+  getAttackValue: function() {
+    return this._attackValue;
   }
 };
 
-/* TEMPLATES */
+/****  TEMPLATES ****/
 
 // Player template
 Game.PlayerTemplate = {
   character: "@",
   foreground: "white",
-  background: "black",
+  maxHp: 40,
+  attackValue: 10,
   mixins: [
     Game.Mixins.Moveable,
     Game.Mixins.PlayerActor,
-    Game.Mixins.SimpleAttacker,
+    Game.Mixins.Attacker,
     Game.Mixins.Destructible
   ]
 };
 
+// Fungus template
 Game.FungusTemplate = {
   character: "F",
   foreground: "green",
+  maxHp: 10,
   mixins: [Game.Mixins.FungusActor, Game.Mixins.Destructible]
 };
