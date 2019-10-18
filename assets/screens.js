@@ -28,41 +28,25 @@ Game.Screen.playScreen = {
   _map: null,
   _player: null,
   enter: function() {
-    const map = [];
     // Create a map based on our size parameters
-    const mapWidth = 100;
-    const mapHeight = 48;
-    for (let x = 0; x < mapWidth; x++) {
-      // Create the nested array for the y values
-      map.push([]);
-      // Add all the tiles
-      for (let y = 0; y < mapHeight; y++) {
-        map[x].push(Game.Tile.nullTile);
-      }
-    }
-    // Setup the map generator
-    const generator = new ROT.Map.Uniform(mapWidth, mapHeight, {
-      timeLimit: 5000
-    });
-    // Smoothen it one last time and then update our map
-    generator.create(function(x, y, v) {
-      if (v === 0) {
-        map[x][y] = Game.Tile.floorTile;
-      } else {
-        map[x][y] = Game.Tile.wallTile;
-      }
-    });
+    const width = 100;
+    const height = 48;
+    const depth = 6;
     // Create our map from the tiles and player
+    const tiles = new Game.Builder(width, height, depth).getTiles();
     this._player = new Game.Entity(Game.PlayerTemplate);
-    this._map = new Game.Map(map, this._player);
+    this._map = new Game.Map(tiles, this._player);
+    //this._map = new Game.Map(map, this._player);
     // Start the map's engine
+    console.log(this._map);
     this._map.getEngine().start();
   },
-  move: function(dX, dY) {
+  move: function(dX, dY, dZ) {
     const newX = this._player.getX() + dX;
     const newY = this._player.getY() + dY;
+    const newZ = this._player.getZ() + dZ;
     // Try to move to the new cell
-    this._player.tryMove(newX, newY, this._map);
+    this._player.tryMove(newX, newY, newZ, this._map);
   },
   exit: function() {
     console.log("Exited play screen.");
@@ -83,7 +67,7 @@ Game.Screen.playScreen = {
       for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
         // Fetch the glyph for the tile and render it to the screen
         // at the offset position.
-        const tile = this._map.getTile(x, y);
+        const tile = this._map.getTile(x, y, this._player.getZ());
         display.draw(
           x - topLeftX,
           y - topLeftY,
@@ -102,15 +86,16 @@ Game.Screen.playScreen = {
       this._player.getBackground()
     );
     // Render the entities
-    const entities = this._map.getEntities();
+    var entities = this._map.getEntities();
     for (let i = 0; i < entities.length; i++) {
-      const entity = entities[i];
+      var entity = entities[i];
       // Only render the entitiy if they would show up on the screen
       if (
         entity.getX() >= topLeftX &&
         entity.getY() >= topLeftY &&
         entity.getX() < topLeftX + screenWidth &&
-        entity.getY() < topLeftY + screenHeight
+        entity.getY() < topLeftY + screenHeight &&
+        entity.getZ() == this._player.getZ()
       ) {
         display.draw(
           entity.getX() - topLeftX,
@@ -133,12 +118,12 @@ Game.Screen.playScreen = {
       );
     }
     // Render player HP
-    let stats = "%c{white}%b{black}";
-    stats += vsprintf("HP: %d/%d ", [
-      this._player.getHp(),
-      this._player.getMaxHp()
-    ]);
-    display.drawText(0, screenHeight, stats);
+    let statsFormat = "%c{white}%b{black}";
+    const statsLine = statsFormat.concat(
+      vsprintf("HP: %d/%d ", [this._player.getHp(), this._player.getMaxHp()]),
+      vsprintf("Dungeon level: %d", this._player.getZ() + 1)
+    );
+    display.drawText(0, screenHeight, statsLine);
   },
   handleInput: function(inputType, inputData) {
     if (inputType === "keydown") {
@@ -154,34 +139,46 @@ Game.Screen.playScreen = {
           inputData.keyCode === ROT.KEYS.VK_LEFT ||
           inputData.keyCode === ROT.KEYS.VK_NUMPAD4
         ) {
-          this.move(-1, 0);
+          this.move(-1, 0, 0);
         } else if (
           inputData.keyCode === ROT.KEYS.VK_RIGHT ||
           inputData.keyCode === ROT.KEYS.VK_NUMPAD6
         ) {
-          this.move(1, 0);
+          this.move(1, 0, 0);
         } else if (
           inputData.keyCode === ROT.KEYS.VK_UP ||
           inputData.keyCode === ROT.KEYS.VK_NUMPAD8
         ) {
-          this.move(0, -1);
+          this.move(0, -1, 0);
         } else if (
           inputData.keyCode === ROT.KEYS.VK_DOWN ||
           inputData.keyCode === ROT.KEYS.VK_NUMPAD2
         ) {
-          this.move(0, 1);
+          this.move(0, 1, 0);
         } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD1) {
-          this.move(-1, 1);
+          this.move(-1, 1, 0);
         } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD3) {
-          this.move(1, 1);
+          this.move(1, 1, 0);
         } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD7) {
-          this.move(-1, -1);
+          this.move(-1, -1, 0);
         } else if (inputData.keyCode === ROT.KEYS.VK_NUMPAD9) {
-          this.move(1, -1);
+          this.move(1, -1, 0);
         }
         // Unlock the engine
         this._map.getEngine().unlock();
       }
+    } else if (inputType === "keypress") {
+      const keyChar = String.fromCharCode(inputData.charCode);
+      if (keyChar === ">") {
+        this.move(0, 0, 1);
+      } else if (keyChar === "<") {
+        this.move(0, 0, -1);
+      } else {
+        // Not a valid key
+        return;
+      }
+      // Unlock the engine
+      this._map.getEngine().unlock();
     }
   }
 };

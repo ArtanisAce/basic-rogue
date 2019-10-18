@@ -5,6 +5,14 @@ Function.prototype.extend = function(a) {
   return this;
 };
 
+Array.prototype.random=function(){return!this.length?null:this[Math.floor(ROT.RNG.getUniform()*this.length)]};
+
+Array.prototype.randomize = function() {
+  for(var a=[];this.length;){
+    var b=this.indexOf(this.random());
+    a.push(this.splice(b,1)[0])}
+    return a};
+
 let Game = {
   _display: null, // ESTOS DOS OBJETOS SON PRIVADOS, SE SUPONE (_) QUIZA HACERLOS PRIVADOS DE VERDAD?
   _currentScreen: null,
@@ -31,8 +39,7 @@ let Game = {
     };
     // Bind keyboard input events
     bindEventToScreen("keydown");
-    //bindEventToScreen('keyup');
-    //bindEventToScreen('keypress');
+    bindEventToScreen("keypress");
   },
   refresh: function() {
     // Clear the screen
