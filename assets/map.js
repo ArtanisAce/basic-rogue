@@ -4,6 +4,9 @@ Game.Map = function(tiles, player) {
   this._depth = tiles.length;
   this._width = tiles[0].length;
   this._height = tiles[0][0].length;
+  // Setup the explored array
+  this._explored = new Array(this._depth);
+  this._setupExploredArray();
   // create a list which will hold the entities
   this._entities = [];
   // create the engine and scheduler
@@ -17,6 +20,9 @@ Game.Map = function(tiles, player) {
       this.addEntityAtRandomPosition(new Game.Entity(Game.FungusTemplate), z);
     }
   }
+  // setup the field of visions
+  this._fov = [];
+  this.setupFov();
 };
 
 // Standard getters
@@ -164,4 +170,59 @@ Game.Map.prototype.getEngine = function() {
 };
 Game.Map.prototype.getEntities = function() {
   return this._entities;
+};
+
+Game.Map.prototype.setupFov = function() {
+  // Keep this in 'map' variable so that we don't lose it.
+  const map = this;
+  // Iterate through each depth level, setting up the field of vision
+  for (let z = 0; z < this._depth; z++) {
+    // We have to put the following code in it's own scope to prevent the
+    // depth variable from being hoisted out of the loop.
+    (function() {
+      // For each depth, we need to create a callback which figures out
+      // if light can pass through a given tile.
+      const depth = z;
+      map._fov.push(
+        new ROT.FOV.DiscreteShadowcasting(
+          function(x, y) {
+            return !map.getTile(x, y, depth).isBlockingLight();
+          },
+          { topology: 4 }
+        )
+      );
+    })();
+  }
+};
+
+Game.Map.prototype.getFov = function(depth) {
+  return this._fov[depth];
+};
+
+Game.Map.prototype._setupExploredArray = function() {
+  for (let z = 0; z < this._depth; z++) {
+    this._explored[z] = new Array(this._width);
+    for (let x = 0; x < this._width; x++) {
+      this._explored[z][x] = new Array(this._height);
+      for (let y = 0; y < this._height; y++) {
+        this._explored[z][x][y] = false;
+      }
+    }
+  }
+};
+
+Game.Map.prototype.setExplored = function(x, y, z, state) {
+  // Only update if the tile is within bounds
+  if (this.getTile(x, y, z) !== Game.Tile.nullTile) {
+    this._explored[z][x][y] = state;
+  }
+};
+
+Game.Map.prototype.isExplored = function(x, y, z) {
+  // Only return the value if within bounds
+  if (this.getTile(x, y, z) !== Game.Tile.nullTile) {
+    return this._explored[z][x][y];
+  } else {
+    return false;
+  }
 };

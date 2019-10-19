@@ -38,7 +38,6 @@ Game.Screen.playScreen = {
     this._map = new Game.Map(tiles, this._player);
     //this._map = new Game.Map(map, this._player);
     // Start the map's engine
-    console.log(this._map);
     this._map.getEngine().start();
   },
   move: function(dX, dY, dZ) {
@@ -62,19 +61,63 @@ Game.Screen.playScreen = {
     let topLeftY = Math.max(0, this._player.getY() - screenHeight / 2);
     // Make sure we still have enough space to fit an entire game screen
     topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
+    // Make sure we still have enough space to fit an entire game screen
+    topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
+    // This object will keep track of all visible map cells
+    var visibleCells = {};
+    // Store this._map and player's z to prevent losing it in callbacks
+    var map = this._map;
+    var currentDepth = this._player.getZ();
+    // Find all visible cells and update the object
+    map
+      .getFov(currentDepth)
+      .compute(
+        this._player.getX(),
+        this._player.getY(),
+        this._player.getSightRadius(),
+        function(x, y, radius, visibility) {
+          visibleCells[x + "," + y] = true;
+          // Mark cell as explored
+          map.setExplored(x, y, currentDepth, true);
+        }
+      );
     // Iterate through all visible map cells
     for (let x = topLeftX; x < topLeftX + screenWidth; x++) {
       for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
-        // Fetch the glyph for the tile and render it to the screen
-        // at the offset position.
-        const tile = this._map.getTile(x, y, this._player.getZ());
-        display.draw(
-          x - topLeftX,
-          y - topLeftY,
-          tile.getChar(),
-          tile.getForeground(),
-          tile.getBackground()
-        );
+        if (visibleCells[x + "," + y]) {
+          // Fetch the glyph for the tile and render it to the screen
+          // at the offset position.
+          const tile = this._map.getTile(x, y, this._player.getZ());
+          display.draw(
+            x - topLeftX,
+            y - topLeftY,
+            tile.getChar(),
+            tile.getForeground(),
+            tile.getBackground()
+          );
+        }
+      }
+    }
+    // Render the explored map cells
+    for (let x = topLeftX; x < topLeftX + screenWidth; x++) {
+      for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
+        if (map.isExplored(x, y, currentDepth)) {
+          // Fetch the glyph for the tile and render it to the screen
+          // at the offset position.
+          const tile = this._map.getTile(x, y, currentDepth);
+          // The foreground color becomes dark gray if the tile has been
+          // explored but is not visible
+          const foreground = visibleCells[x + "," + y]
+            ? tile.getForeground()
+            : "darkGray";
+          display.draw(
+            x - topLeftX,
+            y - topLeftY,
+            tile.getChar(),
+            foreground,
+            tile.getBackground()
+          );
+        }
       }
     }
     // Render the player
@@ -86,9 +129,9 @@ Game.Screen.playScreen = {
       this._player.getBackground()
     );
     // Render the entities
-    var entities = this._map.getEntities();
+    const entities = this._map.getEntities();
     for (let i = 0; i < entities.length; i++) {
-      var entity = entities[i];
+      const entity = entities[i];
       // Only render the entitiy if they would show up on the screen
       if (
         entity.getX() >= topLeftX &&
@@ -97,13 +140,15 @@ Game.Screen.playScreen = {
         entity.getY() < topLeftY + screenHeight &&
         entity.getZ() == this._player.getZ()
       ) {
-        display.draw(
-          entity.getX() - topLeftX,
-          entity.getY() - topLeftY,
-          entity.getChar(),
-          entity.getForeground(),
-          entity.getBackground()
-        );
+        if (visibleCells[entity.getX() + "," + entity.getY()]) {
+          display.draw(
+            entity.getX() - topLeftX,
+            entity.getY() - topLeftY,
+            entity.getChar(),
+            entity.getForeground(),
+            entity.getBackground()
+          );
+        }
       }
     }
     // Get the messages in the player's queue and render them
