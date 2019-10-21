@@ -27,6 +27,7 @@ Game.Screen.startScreen = {
 Game.Screen.playScreen = {
   _map: null,
   _player: null,
+  _gameEnded: false,
   enter: function() {
     // Create a map based on our size parameters
     const width = 100;
@@ -130,8 +131,8 @@ Game.Screen.playScreen = {
     );
     // Render the entities
     const entities = this._map.getEntities();
-    for (let i = 0; i < entities.length; i++) {
-      const entity = entities[i];
+    for (let key in entities) {
+      const entity = entities[key];
       // Only render the entitiy if they would show up on the screen
       if (
         entity.getX() >= topLeftX &&
@@ -171,6 +172,14 @@ Game.Screen.playScreen = {
     display.drawText(0, screenHeight, statsLine);
   },
   handleInput: function(inputType, inputData) {
+    // If the game is over, enter will bring the user to the losing screen.
+    if (this._gameEnded) {
+      if (inputType === "keydown" && inputData.keyCode === ROT.KEYS.VK_RETURN) {
+        Game.switchScreen(Game.Screen.loseScreen);
+      }
+      // Return to make sure the user can't still play
+      return;
+    }
     if (inputType === "keydown") {
       // If enter is pressed, go to the win screen
       // If escape is pressed, go to lose screen
@@ -225,6 +234,9 @@ Game.Screen.playScreen = {
       // Unlock the engine
       this._map.getEngine().unlock();
     }
+  },
+  setGameEnded: function(gameEnded) {
+    this._gameEnded = gameEnded;
   }
 };
 // Define our winning screen
