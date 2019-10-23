@@ -1,12 +1,10 @@
 Game.Item = function(properties) {
   properties = properties || {};
-  // Call the glyph's construtor with our set of properties
-  Game.Glyph.call(this, properties);
-  // Instantiate any properties from the passed object
-  this._name = properties["name"] || "";
+  // Call the dynamic glyph's construtor with our set of properties
+  Game.DynamicGlyph.call(this, properties);
 };
-// Make items inherit all the functionality from glyphs
-Game.Item.extend(Game.Glyph);
+// Make items inherit all the functionality from dynamic glyphs
+Game.Item.extend(Game.DynamicGlyph);
 
 Game.Item.prototype.describe = function() {
   return this._name;

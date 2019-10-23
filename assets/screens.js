@@ -157,10 +157,11 @@ Game.Screen.playScreen = {
         "%c{white}%b{black}" + messages[i]
       );
     }
-    // Render player HP
+    // Render player and dungeon info
     let statsFormat = "%c{white}%b{black}";
     const statsLine = statsFormat.concat(
       vsprintf("HP: %d/%d ", [this._player.getHp(), this._player.getMaxHp()]),
+      vsprintf(this._player.getHungerState()),
       vsprintf("Dungeon level: %d", this._player.getZ() + 1)
     );
     display.drawText(0, screenHeight, statsLine);
