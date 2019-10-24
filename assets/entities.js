@@ -37,7 +37,8 @@ Game.EntityRepository.define("bat", {
   mixins: [
     Game.EntityMixins.WanderActor,
     Game.EntityMixins.Attacker,
-    Game.EntityMixins.Destructible
+    Game.EntityMixins.Destructible,
+    Game.EntityMixins.CorpseDropper
   ]
 });
 
@@ -50,6 +51,7 @@ Game.EntityRepository.define("newt", {
   mixins: [
     Game.EntityMixins.WanderActor,
     Game.EntityMixins.Attacker,
-    Game.EntityMixins.Destructible
+    Game.EntityMixins.Destructible,
+    Game.EntityMixins.CorpseDropper
   ]
 });
