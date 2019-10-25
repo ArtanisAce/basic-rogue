@@ -116,7 +116,18 @@ Game.EntityMixins.Destructible = {
     return this._maxHp;
   },
   getDefenseValue: function() {
-    return this._defenseValue;
+    let modifier = 0;
+    // If we can equip items, then have to take into
+    // consideration weapon and armor
+    if (this.hasMixin(Game.EntityMixins.Equipper)) {
+      if (this.getWeapon()) {
+        modifier += this.getWeapon().getDefenseValue();
+      }
+      if (this.getArmor()) {
+        modifier += this.getArmor().getDefenseValue();
+      }
+    }
+    return this._defenseValue + modifier;
   },
   takeDamage: function(attacker, damage) {
     this._hp -= damage;
@@ -158,7 +169,53 @@ Game.EntityMixins.Attacker = {
     }
   },
   getAttackValue: function() {
-    return this._attackValue;
+    let modifier = 0;
+    // If we can equip items, then have to take into
+    // consideration weapon and armor
+    if (this.hasMixin(Game.EntityMixins.Equipper)) {
+      if (this.getWeapon()) {
+        modifier += this.getWeapon().getAttackValue();
+      }
+      if (this.getArmor()) {
+        modifier += this.getArmor().getAttackValue();
+      }
+    }
+    return this._attackValue + modifier;
+  }
+};
+
+Game.EntityMixins.Equipper = {
+  name: "Equipper",
+  init: function(template) {
+    this._weapon = null;
+    this._armor = null;
+  },
+  wield: function(item) {
+    this._weapon = item;
+  },
+  unwield: function() {
+    this._weapon = null;
+  },
+  wear: function(item) {
+    this._armor = item;
+  },
+  takeOff: function() {
+    this._armor = null;
+  },
+  getWeapon: function() {
+    return this._weapon;
+  },
+  getArmor: function() {
+    return this._armor;
+  },
+  unequip: function(item) {
+    // Helper function to be called before getting rid of an item.
+    if (this._weapon === item) {
+      this.unwield();
+    }
+    if (this._armor === item) {
+      this.takeOff();
+    }
   }
 };
 
@@ -237,6 +294,10 @@ Game.EntityMixins.InventoryHolder = {
     return false;
   },
   removeItem: function(i) {
+    // If we can equip items, then make sure we unequip the item we are removing.
+    if (this._items[i] && this.hasMixin(Game.EntityMixins.Equipper)) {
+      this.unequip(this._items[i]);
+    }
     // Simply clear the inventory slot.
     this._items[i] = null;
   },

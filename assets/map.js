@@ -4,9 +4,6 @@ Game.Map = function(tiles, player) {
   this._depth = tiles.length;
   this._width = tiles[0].length;
   this._height = tiles[0][0].length;
-  // Setup the explored array
-  this._explored = new Array(this._depth);
-  this._setupExploredArray();
   // create a list which will hold the entities
   this._entities = {};
   // Create a table which will hold the items
@@ -14,6 +11,9 @@ Game.Map = function(tiles, player) {
   // Create the engine and scheduler
   this._scheduler = new ROT.Scheduler.Simple();
   this._engine = new ROT.Engine(this._scheduler);
+  // setup the field of visions
+  this._fov = [];
+  this.setupFov();
   // Add the player
   this.addEntityAtRandomPosition(player, 0);
   // Add random entities and items to each floor.
@@ -29,9 +29,24 @@ Game.Map = function(tiles, player) {
       this.addItemAtRandomPosition(Game.ItemRepository.createRandom(), z);
     }
   }
-  // setup the field of visions
-  this._fov = [];
-  this.setupFov();
+  // Add weapons and armor to the map in random positions
+  const templates = [
+    "dagger",
+    "sword",
+    "staff",
+    "tunic",
+    "chainmail",
+    "platemail"
+  ];
+  for (let i = 0; i < templates.length; i++) {
+    this.addItemAtRandomPosition(
+      Game.ItemRepository.create(templates[i]),
+      Math.floor(this._depth * Math.random())
+    );
+  }
+  // Setup the explored array
+  this._explored = new Array(this._depth);
+  this._setupExploredArray();
 };
 
 // Standard getters
