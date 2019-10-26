@@ -9,12 +9,13 @@ Game.Map = function(tiles, player) {
   // Create a table which will hold the items
   this._items = {};
   // Create the engine and scheduler
-  this._scheduler = new ROT.Scheduler.Simple();
+  this._scheduler = new ROT.Scheduler.Speed();
   this._engine = new ROT.Engine(this._scheduler);
   // setup the field of visions
   this._fov = [];
   this.setupFov();
   // Add the player
+  this._player = player;
   this.addEntityAtRandomPosition(player, 0);
   // Add random entities and items to each floor.
   for (let z = 0; z < this._depth; z++) {
@@ -63,6 +64,11 @@ Game.Map.prototype.getDepth = function() {
 Game.Map.prototype.getEngine = function() {
   return this._engine;
 };
+
+Game.Map.prototype.getPlayer = function() {
+  return this._player;
+};
+
 Game.Map.prototype.getEntities = function() {
   return this._entities;
 };
@@ -222,7 +228,7 @@ Game.Map.prototype.setupFov = function() {
           function(x, y) {
             return !map.getTile(x, y, depth).isBlockingLight();
           },
-          { topology: 4 }
+          { topology: 8 }
         )
       );
     })();
