@@ -14,7 +14,9 @@ Game.PlayerTemplate = {
     Game.EntityMixins.Sight,
     Game.EntityMixins.MessageRecipient,
     Game.EntityMixins.FoodConsumer,
-    Game.EntityMixins.Equipper
+    Game.EntityMixins.Equipper,
+    Game.EntityMixins.ExperienceGainer,
+    Game.EntityMixins.PlayerStatGainer
   ]
 };
 
