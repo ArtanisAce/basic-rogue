@@ -166,7 +166,7 @@ Game.Screen.playScreen = {
         this._player.getLevel(),
         this._player.getExperience()
       ]),
-      vsprintf(this._player.getHungerState()),
+      vsprintf(this._player.getHungerState()), //TODO: Change colour depending on state (green, yellow, red)
       vsprintf(" | Dungeon level: %d", this._player.getZ() + 1)
     );
     display.drawText(0, screenHeight, statsLine);

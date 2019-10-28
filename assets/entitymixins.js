@@ -210,30 +210,19 @@ Game.EntityMixins.Destructible = {
   // },
   takeDamage: function(attacker, damage) {
     this._hp -= damage;
-    // If have 0 or less HP, then remove ourseles from the map
+    // If have 0 or less HP, then remove ourselves from the map
     if (this._hp <= 0) {
       Game.sendMessage(attacker, "You kill the %s!", [this.getName()]);
-      // If the entity is a corpse dropper, try to add a corpse
-      if (this.hasMixin(Game.EntityMixins.CorpseDropper)) {
-        this.tryDropCorpse();
-      }
+      // Raise events
+      this.raiseEvent("onDeath", attacker);
+      attacker.raiseEvent("onKill", this);
       this.kill();
-      // Give the attacker experience points.
-      // TODO: Rework the experience points system
-      if (attacker.hasMixin("ExperienceGainer")) {
-        var exp = this.getMaxHp() + this.getDefenseValue();
-        if (this.hasMixin("Attacker")) {
-          exp += this.getAttackValue();
-        }
-        // // Account for level differences
-        // if (this.hasMixin("ExperienceGainer")) {
-        //   exp -= (attacker.getLevel() - this.getLevel()) * 3;
-        // }
-        // Only give experience if more than 0.
-        if (exp > 0) {
-          attacker.giveExperience(exp);
-        }
-      }
+    }
+  },
+  listeners: {
+    onGainLevel: function() {
+      // Heal the entity.
+      this.setHp(this.getMaxHp());
     }
   }
 };
@@ -341,18 +330,21 @@ Game.EntityMixins.CorpseDropper = {
     // Chance of dropping a cropse (out of 100).
     this._corpseDropRate = template["corpseDropRate"] || 100;
   },
-  tryDropCorpse: function() {
-    if (Math.round(Math.random() * 100) < this._corpseDropRate) {
-      // Create a new corpse item and drop it.
-      this._map.addItem(
-        this.getX(),
-        this.getY(),
-        this.getZ(),
-        Game.ItemRepository.create("corpse", {
-          name: this._name + " corpse",
-          foreground: this._foreground
-        })
-      );
+  listeners: {
+    onDeath: function(attacker) {
+      // Check if we should drop a corpse.
+      if (Math.round(Math.random() * 100) <= this._corpseDropRate) {
+        // Create a new corpse item and drop it.
+        this._map.addItem(
+          this.getX(),
+          this.getY(),
+          this.getZ(),
+          Game.ItemRepository.create("corpse", {
+            name: this._name + " corpse",
+            foreground: this._foreground
+          })
+        );
+      }
     }
   }
 };
@@ -561,12 +553,23 @@ Game.EntityMixins.ExperienceGainer = {
     // Check if we gained at least one level.
     if (levelsGained > 0) {
       Game.sendMessage(this, "You advance to level %d.", [this._level]);
-      // Heal the entity if possible.
-      if (this.hasMixin("Destructible")) {
-        this.setHp(this.getMaxHp());
+      this.raiseEvent("onGainLevel");
+    }
+  },
+  listeners: {
+    onKill: function(victim) {
+      //TODO: Refactor to Basic Fantasy
+      var exp = victim.getMaxHp() + victim.getDefenseValue();
+      if (victim.hasMixin("Attacker")) {
+        exp += victim.getAttackValue();
       }
-      if (this.hasMixin("StatGainer")) {
-        this.onGainLevel();
+      // Account for level differences
+      if (victim.hasMixin("ExperienceGainer")) {
+        exp -= (this.getLevel() - victim.getLevel()) * 3;
+      }
+      // Only give experience if more than 0.
+      if (exp > 0) {
+        this.giveExperience(exp);
       }
     }
   }
@@ -590,13 +593,14 @@ Game.EntityMixins.ExperienceGainer = {
 Game.EntityMixins.PlayerStatGainer = {
   name: "PlayerStatGainer",
   groupName: "StatGainer",
-  onGainLevel: function() {
-    // TODO: We will increase the hit points depending on player's class.
-    // For now, we'll just give 8 points
-    this.increaseMaxHp(8);
-    // // Setup the gain stat screen and show it.
-    // Game.Screen.gainStatScreen.setup(this);
-    // Game.Screen.playScreen.setSubScreen(Game.Screen.gainStatScreen);
+  listeners: {
+    onGainLevel: function() {
+      // // Setup the gain stat screen and show it.
+      // Game.Screen.gainStatScreen.setup(this);
+      // Game.Screen.playScreen.setSubScreen(Game.Screen.gainStatScreen);
+      //TODO: Check for player class here
+      this.increaseMaxHp(8);
+    }
   }
 };
 
