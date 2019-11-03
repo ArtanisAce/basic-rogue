@@ -77,3 +77,44 @@ Game.EntityRepository.define("kobold", {
     Game.EntityMixins.CorpseDropper
   ]
 });
+
+Game.EntityRepository.define(
+  "giant zombie",
+  {
+    name: "giant zombie",
+    character: "Z",
+    foreground: "teal",
+    maxHp: 30,
+    attackValue: 8,
+    defenseValue: 5,
+    level: 5,
+    sightRadius: 6,
+    mixins: [
+      Game.EntityMixins.GiantZombieActor,
+      Game.EntityMixins.Sight,
+      Game.EntityMixins.Attacker,
+      Game.EntityMixins.Destructible,
+      Game.EntityMixins.CorpseDropper
+    ]
+  },
+  {
+    disableRandomCreation: true
+  }
+);
+
+Game.EntityRepository.define("slime", {
+  name: "slime",
+  character: "s",
+  foreground: "lightGreen",
+  maxHp: 10,
+  attackValue: 5,
+  sightRadius: 3,
+  tasks: ["hunt", "wander"],
+  mixins: [
+    Game.EntityMixins.TaskActor,
+    Game.EntityMixins.Sight,
+    Game.EntityMixins.Attacker,
+    Game.EntityMixins.Destructible,
+    Game.EntityMixins.CorpseDropper
+  ]
+});

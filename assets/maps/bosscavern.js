@@ -1,6 +1,11 @@
 Game.Map.BossCavern = function() {
   // Call the Map constructor
   Game.Map.call(this, this._generateTiles(80, 24));
+  // Create the giant zombie
+  this.addEntityAtRandomPosition(
+    Game.EntityRepository.create("giant zombie"),
+    0
+  );
 };
 Game.Map.BossCavern.extend(Game.Map);
 
@@ -74,7 +79,6 @@ Game.Map.BossCavern.prototype._generateTiles = function(width, height) {
       Game.Tile.waterTile
     );
   }
-
   // Return the tiles in an array as we only have 1 depth level.
   return [tiles];
 };

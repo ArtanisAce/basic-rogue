@@ -26,7 +26,6 @@ Game.Screen.startScreen = {
 
 // Define our playing screen
 Game.Screen.playScreen = {
-  _map: null,
   _player: null,
   _gameEnded: false,
   _subScreen: null,
@@ -34,21 +33,20 @@ Game.Screen.playScreen = {
     // Create a map based on our size parameters
     const width = 100;
     const height = 48;
-    const depth = 6;
+    const depth = 1; // doesn't count the final level!
     // Create our map from the tiles and player
-    const tiles = new Game.Builder(width, height, depth).getTiles();
     this._player = new Game.Entity(Game.PlayerTemplate);
-    this._map = new Game.Map(tiles, this._player);
-    //this._map = new Game.Map(map, this._player);
+    var tiles = new Game.Builder(width, height, depth).getTiles();
+    var map = new Game.Map.Dungeon(tiles, this._player);
     // Start the map's engine
-    this._map.getEngine().start();
+    map.getEngine().start();
   },
   move: function(dX, dY, dZ) {
     const newX = this._player.getX() + dX;
     const newY = this._player.getY() + dY;
     const newZ = this._player.getZ() + dZ;
     // Try to move to the new cell
-    this._player.tryMove(newX, newY, newZ, this._map);
+    this._player.tryMove(newX, newY, newZ, this._player.getMap());
   },
   exit: function() {
     console.log("Exited play screen.");
@@ -64,17 +62,21 @@ Game.Screen.playScreen = {
     // Make sure the x-axis doesn't go to the left of the left bound
     let topLeftX = Math.max(0, this._player.getX() - screenWidth / 2);
     // Make sure we still have enough space to fit an entire game screen
-    topLeftX = Math.min(topLeftX, this._map.getWidth() - screenWidth);
+    topLeftX = Math.min(
+      topLeftX,
+      this._player.getMap().getWidth() - screenWidth
+    );
     // Make sure the y-axis doesn't above the top bound
     let topLeftY = Math.max(0, this._player.getY() - screenHeight / 2);
     // Make sure we still have enough space to fit an entire game screen
-    topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
-    // Make sure we still have enough space to fit an entire game screen
-    topLeftY = Math.min(topLeftY, this._map.getHeight() - screenHeight);
+    topLeftY = Math.min(
+      topLeftY,
+      this._player.getMap().getHeight() - screenHeight
+    );
     // This object will keep track of all visible map cells
     var visibleCells = {};
-    // Store this._map and player's z to prevent losing it in callbacks
-    var map = this._map;
+    // Store this._player.getMap() and player's z to prevent losing it in callbacks
+    var map = this._player.getMap();
     var currentDepth = this._player.getZ();
     // Find all visible cells and update the object
     map
@@ -89,30 +91,13 @@ Game.Screen.playScreen = {
           map.setExplored(x, y, currentDepth, true);
         }
       );
-    // Iterate through all visible map cells
-    for (let x = topLeftX; x < topLeftX + screenWidth; x++) {
-      for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
-        if (visibleCells[x + "," + y]) {
-          // Fetch the glyph for the tile and render it to the screen
-          // at the offset position.
-          const tile = this._map.getTile(x, y, this._player.getZ());
-          display.draw(
-            x - topLeftX,
-            y - topLeftY,
-            tile.getChar(),
-            tile.getForeground(),
-            tile.getBackground()
-          );
-        }
-      }
-    }
     // Render the explored map cells
     for (let x = topLeftX; x < topLeftX + screenWidth; x++) {
       for (let y = topLeftY; y < topLeftY + screenHeight; y++) {
         if (map.isExplored(x, y, currentDepth)) {
           // Fetch the glyph for the tile and render it to the screen
           // at the offset position.
-          let glyph = this._map.getTile(x, y, currentDepth);
+          let glyph = map.getTile(x, y, currentDepth);
           let foreground = glyph.getForeground();
           // If we are at a cell that is in the field of vision, we need
           // to check if there are items or entities.
@@ -159,6 +144,9 @@ Game.Screen.playScreen = {
     }
     // Render player and dungeon info
     let statsFormat = "%c{white}%b{black}";
+    // console.log(this._player.getX());
+    // console.log(this._player.getY());
+    // console.log(this._player.getZ());
     const statsLine = statsFormat.concat(
       vsprintf("HP: %d/%d | L: %d | XP: %d | ", [
         this._player.getHp(),
@@ -264,11 +252,13 @@ Game.Screen.playScreen = {
           }
           return;
         } else if (inputData.keyCode === ROT.KEYS.VK_COMMA) {
-          var items = this._map.getItemsAt(
-            this._player.getX(),
-            this._player.getY(),
-            this._player.getZ()
-          );
+          var items = this._player
+            .getMap()
+            .getItemsAt(
+              this._player.getX(),
+              this._player.getY(),
+              this._player.getZ()
+            );
           // If there is only one item, directly pick it up
           if (items && items.length === 1) {
             var item = items[0];
@@ -294,7 +284,10 @@ Game.Screen.playScreen = {
           return;
         }
         // Unlock the engine
-        this._map.getEngine().unlock();
+        this._player
+          .getMap()
+          .getEngine()
+          .unlock();
       }
     } else if (inputType === "keypress") {
       const keyChar = String.fromCharCode(inputData.charCode);
@@ -307,7 +300,10 @@ Game.Screen.playScreen = {
         return;
       }
       // Unlock the engine
-      this._map.getEngine().unlock();
+      this._player
+        .getMap()
+        .getEngine()
+        .unlock();
     }
   },
   setGameEnded: function(gameEnded) {
@@ -327,6 +323,7 @@ Game.Screen.playScreen = {
     }
   }
 };
+
 // Define our winning screen
 Game.Screen.winScreen = {
   enter: function() {

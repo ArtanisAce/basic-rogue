@@ -12,13 +12,13 @@ Game.Map.Dungeon = function(tiles, player) {
       // Add a random entity
       this.addEntityAtRandomPosition(entity, z);
       // Level up the entity based on the floor
-      if (entity.hasMixin("ExperienceGainer")) {
-        for (var level = 0; level < z; level++) {
-          entity.giveExperience(
-            entity.getNextLevelExperience() - entity.getExperience()
-          );
-        }
-      }
+      // if (entity.hasMixin("ExperienceGainer")) {
+      //   for (var level = 0; level < z; level++) {
+      //     entity.giveExperience(
+      //       entity.getNextLevelExperience() - entity.getExperience()
+      //     );
+      //   }
+      // }
     }
     // 15 items per floor
     for (var i = 0; i < 15; i++) {
